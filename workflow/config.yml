@@ -1,0 +1,2 @@
+sample_table: '../samples.csv'
+output_dir: 'test'
