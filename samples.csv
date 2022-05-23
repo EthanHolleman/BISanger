@@ -1,0 +1,9 @@
+sample_name,trace_path,template_name,template_path,state,treatment,bisulfite,expected_read_length
+pFC9-SC,reads/pFC9-SC_VRI_1__2022-05-17_G11.ab1,pFC9,templates/pFC9.fa,supercoiled,ds,FALSE,250
+pFC9-SC-B1,reads/pFC9-B1_oEH11__2022-05-12_B09.ab1,pFC9,templates/pFC9.fa,supercoiled,boiled,TRUE,250
+pFC9-SC-B2,reads/pFC9-B2_oEH11__2022-05-12_C09.ab1,pFC9,templates/pFC9.fa,supercoiled,boiled,TRUE,250
+pFC9-SC-B3,reads/pFC9-B3_oEH11__2022-05-12_D09.ab1,pFC9,templates/pFC9.fa,supercoiled,boiled,TRUE,250
+pFC9-LN-B1,reads/pFC9-EcoRI-B1_oEH11__2022-05-17_C11.ab1,pFC9,templates/pFC9.fa,linear,boiled,TRUE,250
+pFC9-LN-B2,reads/pFC9-EcoRI-B2_oEH11__2022-05-17_D11.ab1,pFC9,templates/pFC9.fa,linear,boiled,TRUE,250
+pFC9-LN-B3,reads/pFC9-EcoRI-B3_oEH11__2022-05-17_E11.ab1,pFC9,templates/pFC9.fa,linear,boiled,TRUE,400
+pFC9-SC-Bis,reads/pFC9-SC-Bisulfite_VRI_1__2022-05-17_F11.ab1,pFC9,templates/pFC9.fa,linear,ds,TRUE,400
