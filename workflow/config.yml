@@ -1,2 +1,2 @@
-sample_table: '../samples.csv'
+sample_table: 'samples.csv'
 output_dir: 'test'

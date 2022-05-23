@@ -3,37 +3,59 @@ rule align_to_reference:
         '../envs/tracy.yml'
     input:
         reference=lambda wildcards: sample_df.loc[wildcards.sample]['template_path'],
+        read=lambda wildcards: sample_df.loc[wildcards.sample]['trace_path']
     output:
         alignment='{output_dir}/tracyAlignments/{sample}.align.json'
+    params:
+        # tracy appends extensions so need to fake it to not make output
+        # json.json
+        passed_output_name='{output_dir}/tracyAlignments/{sample}.align'
     shell:'''
+    tracy align -r {input.reference} -k 5 -l 20 {input.read} -o {params.passed_output_name}
     '''
 
 
 rule make_TC_Table:
     conda:
-        '../envs/TC.yml'
+        '../envs/py.yml'
     input:
         alignment='{output_dir}/tracyAlignments/{sample}.align.json'
     output:
         TC_table='{output_dir}/conversionTables/{sample}.conversion.table.tsv'
     params:
-        sample_name=lambda wildcards: config[wildcards.sample],
+        sample_name=lambda wildcards: wildcards.sample,
         reference_name=lambda wildcards: sample_df.loc[wildcards.sample]['template_name'],
         sample_treatment=lambda wildcards: sample_df.loc[wildcards.sample]['treatment'],
-        bisulfite=lambda wildcards: sample_df.loc[wildcards.sample]['bisulfite']
+        bisulfite=lambda wildcards: sample_df.loc[wildcards.sample]['bisulfite'],
+        topo=lambda wildcards: sample_df.loc[wildcards.sample]['state'],
+        expected_read_length=lambda wildcards: sample_df.loc[wildcards.sample]['expected_read_length'],
     shell:'''
-    python scripts/T2C.py {input.alignment} {params.sample_name} {params.reference_name}
-    {params.sample_treatment} {params.bisulfite} {output.TC_table} 
+    python workflow/scripts/T2C.py --A {input.alignment} --S {params.sample_name} --R {params.reference_name} \
+    --T {params.sample_treatment} --B {params.bisulfite} --O {output.TC_table} --C {params.topo} --E {params.expected_read_length}
     '''
 
 
-# rule concat_TC_tables:
-#     input:
-#         expand('alltables')
-#     output:
-#         'alltables.tsv'
-#     shell:'''
-#     cat {input} > {output}
-#     '''
+rule concat_TC_tables:
+    conda:
+        '../envs/py.yml'
+    input:
+        expand(
+            '{output_dir}/conversionTables/{sample}.conversion.table.tsv',
+            output_dir=config['output_dir'], sample=sample_df.index.values
+        )
+    output:
+        '{output}/concatTables/concatConversionTable.tsv'
+    script:'../scripts/concat.py'
+
+
+rule plot_conversion_data:
+    conda:
+        '../envs/R.yml'
+    input:
+        concat_sample_table='{output}/concatTables/concatConversionTable.tsv'
+    output:
+        png='{output}/plots/{output}.conversionPlots.png'
+    script:'../scripts/plotT2C.R'
+
 
     

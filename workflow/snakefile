@@ -1,23 +1,15 @@
 import pandas as pd
 from pathlib import Path
 
+sample_df = pd.read_csv(config['sample_table'], index_col='sample_name')
+
 include: 'rules/biSanger.smk'
 
-sample_df = pd.read_csv(config['sample_table'])
-
-if Path(config['output_dir']):
+if not Path(config['output_dir']).is_dir():
     Path(config['output_dir']).mkdir(parents=True)
 
 
-print(expand(
-            '{output_dir}/conversionTables/{sample}.conversion.table.tsv',
-            output_dir=config['output_dir']
-        )
-)
-
 rule all:
     input:
-        expand(
-            '{output_dir}/conversionTables/{sample}.conversion.table.tsv',
-            output_dir=config['output_dir']
-        )
+        f"{config['output_dir']}/plots/{config['output_dir']}.conversionPlots.png"
+
