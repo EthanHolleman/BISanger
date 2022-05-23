@@ -20,3 +20,5 @@ Snakemake based workflow is designed to do just that.
 
 1. Install snakemake
 2. Run `snakemake -j 1 --configfile workflow/config.yml --use-conda` from the root directory of the repo.
+
+![](assets/test.conversionPlots.png)
