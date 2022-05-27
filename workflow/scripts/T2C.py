@@ -17,6 +17,7 @@ def get_args():
     parser.add_argument('--O', help='Output path. Output is always tsv formated.')
     parser.add_argument('--C', help='Topo state of template when treated')
     parser.add_argument('--E', help='Expected read length')
+    parser.add_argument('--Z', help='Template table path')
 
     return parser.parse_args()
 
@@ -25,6 +26,30 @@ def read_tracy_alignment(filepath):
 
     with open(filepath) as handle:
         return json.load(handle)
+    
+
+
+def make_template_table(tracy_dict, template_name):
+    template_table = []
+    for i in range(len(tracy_dict['altalign'])):
+        
+
+            row = {
+                'template_base': tracy_dict['refalign'][i].upper(),
+                'index': i,
+                'pos': i,
+                'template_name': template_name,
+                'value': 0
+            }
+
+            if tracy_dict['refalign'][i].upper() == 'C':
+                row['value'] = 1
+            
+            template_table.append(row)
+
+
+    return pd.DataFrame(template_table)
+
 
 
 def make_TC_table(tracy_dict, sample_name, ref_name, treatment, bisulfite, topo, expected_read_length):
@@ -48,7 +73,7 @@ def make_TC_table(tracy_dict, sample_name, ref_name, treatment, bisulfite, topo,
                 signal = {}
 
                 for each_base in ['A', 'T', 'G', 'C']:
-                    call_index = int(basecall_index[ungapped_steps]) - 1
+                    call_index = int(basecall_index[i])
                     base_rfu = tracy_dict['gappedTrace'][f'peak{each_base}'][call_index]
                     signal[each_base] = base_rfu
 
@@ -90,7 +115,9 @@ def main():
     tracy_dict = read_tracy_alignment(args.A)
     print('read dict')
     TC_table = make_TC_table(tracy_dict, args.S, args.R, args.T, args.B, args.C, args.E)
+    template_table = make_template_table(tracy_dict, args.R)
     TC_table.to_csv(args.O, sep='\t', index=False)
+    template_table.to_csv(args.Z, sep='\t', index=False)
     print('wrote table')
 
 
