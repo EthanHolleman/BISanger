@@ -37,7 +37,7 @@ def make_template_table(tracy_dict, template_name):
             row = {
                 'template_base': tracy_dict['refalign'][i].upper(),
                 'index': i,
-                'pos': i,
+                'pos': i+1,
                 'template_name': template_name,
                 'value': 0
             }
@@ -54,59 +54,124 @@ def make_template_table(tracy_dict, template_name):
 
 def make_TC_table(tracy_dict, sample_name, ref_name, treatment, bisulfite, topo, expected_read_length):
 
-    # get list of all basecall positions in order
-    basecall_index = tracy_dict['gappedTrace']['basecallPos']
-
     TC_table = []
 
-    assert len(basecall_index), len(tracy_dict['altalign'].replace('-', ''))
-    print(len(basecall_index), len(tracy_dict['altalign'].replace('-', '')))  # these are the same
+    # get list of all basecall positions in order
+    basecalls = tracy_dict['gappedTrace']['basecalls']
+    refalign, altalign = tracy_dict['refalign'], tracy_dict['altalign']
 
+    # basecall specify position using base 1 indexing
 
-    site_counter = 0
-    ungapped_steps = 0
-    for i in range(len(tracy_dict['altalign'])):
-        # check to make sure not a gap in the alt align
-        if tracy_dict['altalign'][i] != '-' and i < int(expected_read_length):
-            if tracy_dict['refalign'][i].upper() == 'C':
-                # check the RFU values at this position
-                signal = {}
+    # create list of basecall positions sorted by integer value. These are
+    # the keys of the basecall dictionary this also appears to be base 1
 
-                for each_base in ['A', 'T', 'G', 'C']:
-                    call_index = int(basecall_index[i])
-                    base_rfu = tracy_dict['gappedTrace'][f'peak{each_base}'][call_index]
-                    signal[each_base] = base_rfu
+    basecall_pos_raw = sorted(basecalls.keys(), key=lambda x: int(x))
+    for raw_call in basecall_pos_raw:
+        call_info = basecalls[str(raw_call)].split(':')
+        print(call_info)
+        seq_pos = call_info[0]
 
-                total_signal = sum(signal.values())
+        total_signal = 0
+        signal_dict = {base: 0 for base in ['A', 'T', 'G', 'C']}
+        refbase = '-'
+        altbase = '-'
+        
+        if seq_pos != '-':  # is *not* a gap
+            seq_pos = int(seq_pos)
 
-                try:
-                    T_to_C = signal['T'] / (signal['T'] + signal['C'])
-                except ZeroDivisionError:
-                    print('Zero divison error', signal)
-                    T_to_C = 0
-                TC_row = {
+            if seq_pos >= int(expected_read_length):
+                break
+            else:
+                for base in signal_dict.keys():
+                    signal_dict[base] = tracy_dict['gappedTrace'][f'peak{base}'][int(raw_call)-1]
+                    total_signal = sum(signal_dict.values())
+
+                    try:
+                        T_to_C = signal_dict['T'] / (signal_dict['C'] + signal_dict['T'])
+                    except ZeroDivisionError:
+                        T_to_C = 0
+                
+                refbase = refalign[seq_pos-1]
+                altbase = altalign[seq_pos-1]
+        
+        else:
+            seq_pos = 0
+
+        TC_row = {
                     'total_signal': total_signal,
                     'T_to_C': T_to_C,
-                    'T': signal['T'],
-                    'C': signal['C'],
-                    'refBase': tracy_dict['refalign'][i].upper(),
-                    'altBase': tracy_dict['altalign'][i].upper(),
-                    'read_index': i,
-                    'converted_site_index': site_counter,
+                    'T': signal_dict['T'],
+                    'C': signal_dict['C'],
+                    'refBase': refbase,
+                    'altBase': altbase,
+                    'read_index': seq_pos-1,
                     'sample_name': sample_name,
                     'treatment': treatment,
                     'ref_name': ref_name,
                     'bisulfite': bisulfite,
                     'topo_state': topo
                 }
-                TC_table.append(TC_row)
-                site_counter += 1
+        
+        TC_table.append(TC_row)
 
-            ungapped_steps += 1
-    
-    # convert list of dicts to a DataFrame to easy export
     return pd.DataFrame(TC_table)
 
+
+
+
+
+
+
+
+
+
+    # TC_table = []
+
+    # assert len(basecall_index), len(tracy_dict['altalign'].replace('-', ''))
+    # print(len(basecall_index), len(tracy_dict['altalign'].replace('-', '')))  # these are the same
+
+
+    # site_counter = 0
+    # gaps = 0
+    # for i in range(len(tracy_dict['altalign'])):
+    #     # check to make sure not a gap in the alt align
+    #     if tracy_dict['altalign'][i] == '-':
+    #         gaps += 1
+    #     elif i < int(expected_read_length):
+    #         if tracy_dict['refalign'][i].upper() == 'C':
+    #             # check the RFU values at this position
+    #             signal = {}
+
+    #             for each_base in ['A', 'T', 'G', 'C']:
+    #                 call_index = int(basecall_index[i]) - 1
+    #                 base_rfu = tracy_dict['gappedTrace'][f'peak{each_base}'][call_index]
+    #                 signal[each_base] = base_rfu
+
+    #             total_signal = sum(signal.values())
+
+    #             try:
+    #                 T_to_C = signal['T'] / (signal['T'] + signal['C'])
+    #             except ZeroDivisionError:
+    #                 print('Zero divison error', signal)
+    #                 T_to_C = 0
+    #             TC_row = {
+    #                 'total_signal': total_signal,
+    #                 'T_to_C': T_to_C,
+    #                 'T': signal['T'],
+    #                 'C': signal['C'],
+    #                 'refBase': tracy_dict['refalign'][i].upper(),
+    #                 'altBase': tracy_dict['altalign'][i].upper(),
+    #                 'read_index': i,
+    #                 'converted_site_index': site_counter,
+    #                 'sample_name': sample_name,
+    #                 'treatment': treatment,
+    #                 'ref_name': ref_name,
+    #                 'bisulfite': bisulfite,
+    #                 'topo_state': topo
+    #             }
+    #             TC_table.append(TC_row)
+    #             site_counter += 1
+    
 
 def main():
     

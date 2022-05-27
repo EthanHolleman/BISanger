@@ -55,10 +55,10 @@ rule plot_conversion_data:
     conda:
         '../envs/R.yml'
     input:
-        plots=expand(
-            '{output_dir}/plots/rawTraces/{sample}.rawTrace.png',
-            output_dir=config['output_dir'], sample=sample_df.index.values
-        ),
+        # plots=expand(
+        #     '{output_dir}/plots/rawTraces/{sample}.rawTrace.png',
+        #     output_dir=config['output_dir'], sample=sample_df.index.values
+        # ),
         concat_sample_table='{output}/concatTables/concatConversionTable.tsv'
     output:
         png='{output}/plots/{output}.conversionPlots.png'

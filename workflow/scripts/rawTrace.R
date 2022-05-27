@@ -22,7 +22,7 @@ drop.uncalled.values <- function(df, read.length){
 plot.raw.trace <- function(df.base, template.table){
 
     df.trace <- df.base[c("peakC", "peakA", "peakT", "peakG", "basenum")]
-    df.trace$T_to_C <- df.base$peak T / (df.base$peakT + df.base$peakC)
+    df.trace$T_to_C <- df.base$peakT / (df.base$peakT + df.base$peakC)
     df.trace$sum <- df.base$peakC + df.base$peakA + df.base$peakT + df.base$peakG
 
     df.trace$peakC <- df.trace$peakC / df.trace$sum
@@ -41,10 +41,14 @@ plot.raw.trace <- function(df.base, template.table){
 
     df.TC <- df.base[c("peakC", "peakT", "basenum")]
     df.melt.TC <- melt(df.TC, 'basenum')
+    df.melt.TC <- na.omit(df.melt.TC)
 
     # scale so C positions are visible 
-    max.value <- max(df.melt$value)
-    template.table$value = (template.table$value * max.value) + (max.value * 0.25 * (template.table$value/template.table$value))
+    max.value <- max(df.melt.TC$value)
+
+    print(max.value)
+    print('+++++++++++++++++++++')
+    template.table$value <- template.table$value * max.value
 
     TC <- ggplot() +
         geom_bar(
@@ -52,18 +56,14 @@ plot.raw.trace <- function(df.base, template.table){
             aes(x=pos, y=value), fill='dodgerblue', stat='identity', alpha=0.3
             ) +
         geom_bar(
-            data=df.melt,
+            data=df.melt.TC,
             aes(x=basenum, y=value, fill=variable), 
             color='black', stat='identity', width=0.5
             ) +
-        geom_line(
-            data=df.melt,
-            aes(x=basenum, y=T_to_C)
-        )
         theme_pubr()
 
     
-    ggarrange(all.bases, TC, nrow=2, ncol=1)
+    ggarrange(TC, nrow=1, ncol=1)
 
 
 }
