@@ -1,1 +1,4 @@
 .snakemake/
+
+# ignore test run dir
+test_run/
